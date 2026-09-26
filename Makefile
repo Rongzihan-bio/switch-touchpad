@@ -12,6 +12,8 @@ test:
 	./build/host/layer-stacks-tests
 	c++ -std=c++20 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I. touch/core.cpp tests/watchdog_tests.cpp -o build/host/watchdog-tests
 	./build/host/watchdog-tests
+	c++ -std=c++20 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I. touch/core.cpp touch/draw.cpp common/config.cpp common/storage.cpp tests/arcade_tests.cpp -o build/host/arcade-tests
+	./build/host/arcade-tests
 build:
 	python3 scripts/build.py
 package:

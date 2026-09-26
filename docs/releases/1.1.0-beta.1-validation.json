@@ -1,0 +1,20 @@
+{
+  "release_version": "1.1.0-beta.1",
+  "feature": "fixed-center arcade eight-way stick",
+  "hardware_verified": false,
+  "baseline_git_tag": "v1.0.0-beta.1",
+  "baseline_user_confirmation": "rc10 backend and frontend issues resolved; preserved in 1.0 beta",
+  "confirmed_preferences": [
+    "separate selectable arcade mode",
+    "fixed center",
+    "immediate equal 45-degree direction sectors",
+    "continue following outside the ring until center or touch release"
+  ],
+  "reference_commit": "yoyofr/iFBA@6709591b9b588d4d5aa89632a19258138dc1ce0d",
+  "required_hardware_validation": [
+    "directions received in target game",
+    "quarter-circle and dragon-punch feel",
+    "diagonal accuracy and neutral release",
+    "unchanged load and Tesla behavior"
+  ]
+}

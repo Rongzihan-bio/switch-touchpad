@@ -183,7 +183,8 @@ static void configuration() {
     CHECK(parseCombo("l+ddown+rs",0) == parseCombo("L+DDOWN+RS",0));
     CHECK(parseCombo("SL+SR",0) == ((1ULL<<24)|(1ULL<<25)|(1ULL<<26)|(1ULL<<27)));
     Request r; CHECK(valid(r));
-    r.version = 2; CHECK(!valid(r)); r = {}; r.size--; CHECK(!valid(r));
+    r.version = 1; CHECK(!valid(r)); r.version=ProtocolVersion+1; CHECK(!valid(r));
+    r = {}; r.size--; CHECK(!valid(r));
     r = {}; r.reserved = 1; CHECK(!valid(r)); r = {}; r.command = static_cast<Command>(99); CHECK(!valid(r));
     PadState p; p.lx = 32768; CHECK(!valid(p)); p = {}; p.rx = 1; CHECK(!valid(p));
     p = {}; p.buttons = ButtonL|ButtonR; CHECK(!valid(p) && valid(p,true));

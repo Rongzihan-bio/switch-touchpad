@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "touch/draw.hpp"
+#include "touch/arcade.hpp"
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -42,12 +43,30 @@ void draw(uint16_t* pixels, uint32_t stride, const Settings& s, const PadState& 
     const auto fill = color(2,3,4,a), edge = color(11,12,13,a), text = color(15,15,15,std::min(15U,a+3));
     circle(pixels,stride,l.stick,fill,edge,divisor);
     Circle inner = l.stick;
-    inner.radius *= s.deadzone/100.0f;
+    const bool arcade=s.stick_mode==StickMode::Arcade8;
+    inner.radius *= (arcade ? s.arcade_deadzone : s.deadzone)/100.0f;
     circle(pixels,stride,inner,color(3,4,5,a),color(6,7,8,a),divisor);
     Circle knob = l.stick;
-    knob.radius *= 0.32f;
-    knob.x += p.lx/32767.0f * l.stick.radius*0.66f;
-    knob.y -= p.ly/32767.0f * l.stick.radius*0.66f;
+    if (arcade) {
+        const auto direction=padDirection(p);
+        for (unsigned i=1; i<=9; ++i) {
+            if (i==5) continue;
+            const auto d=static_cast<Direction>(i);
+            const auto axes=directionAxes(d);
+            const float distance=l.stick.radius*0.84f/(axes.x && axes.y ? 1.41421356f : 1.0f);
+            Circle mark{l.stick.x+axes.x*distance,l.stick.y-axes.y*distance,l.stick.radius*0.065f};
+            const auto c=d==direction ? color(2,12,10,std::min(15U,a+4)) : edge;
+            circle(pixels,stride,mark,c,c,divisor);
+        }
+        const auto axes=directionAxes(direction);
+        knob.radius *= 0.28f;
+        knob.x += axes.x*l.stick.radius*0.32f;
+        knob.y -= axes.y*l.stick.radius*0.32f;
+    } else {
+        knob.radius *= 0.32f;
+        knob.x += p.lx/32767.0f * l.stick.radius*0.66f;
+        knob.y -= p.ly/32767.0f * l.stick.radius*0.66f;
+    }
     circle(pixels,stride,knob,color(5,10,11,a+1),text,divisor);
     constexpr uint64_t bits[] = {ButtonA,ButtonB,ButtonX,ButtonY};
     for (unsigned i = 0; i < 4; ++i) {

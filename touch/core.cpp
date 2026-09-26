@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "touch/core.hpp"
+#include "touch/arcade.hpp"
 #include <algorithm>
 #include <cmath>
 
@@ -43,7 +44,9 @@ PadState Mapper::update(const Touches& t, const Settings& s) {
         const float x = (owner->x - layout.stick.x) / layout.stick.radius;
         const float y = (layout.stick.y - owner->y) / layout.stick.radius;
         const float length = std::hypot(x, y), dead = s.deadzone / 100.0f;
-        if (length > dead) {
+        if (s.stick_mode == StickMode::Arcade8) {
+            applyArcadeDirection(out,arcadeDirection(x,y,s.arcade_deadzone/100.0f),s.arcade_output);
+        } else if (length > dead) {
             const float magnitude = (std::min(length, 1.0f) - dead) / (1.0f - dead);
             out.lx = static_cast<int32_t>(std::lround(x / length * magnitude * 32767));
             out.ly = static_cast<int32_t>(std::lround(y / length * magnitude * 32767));

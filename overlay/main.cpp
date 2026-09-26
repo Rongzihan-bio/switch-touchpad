@@ -114,6 +114,30 @@ public:
         return false;
     }
 };
+template<class Enum>
+class ChoiceItem : public tsl::elm::ListItem {
+    Enum* value_;
+    const char* labels_[2];
+    void select(unsigned index) { *value_=static_cast<Enum>(index); sync(); }
+public:
+    ChoiceItem(const char* name, Enum* value, const char* first, const char* second)
+        : ListItem(name), value_(value), labels_{first,second} {
+        sync();
+        setClickListener([this](u64 keys) {
+            if (!(keys & HidNpadButton_A)) return false;
+            select(static_cast<unsigned>(*value_)==0 ? 1 : 0); return true;
+        });
+    }
+    void sync() {
+        const auto* text=labels_[static_cast<unsigned>(*value_)==0 ? 0 : 1];
+        if (getValue()!=text) setValue(text);
+    }
+    bool handleInput(u64 down,u64,const HidTouchState&,HidAnalogStickState,HidAnalogStickState) override {
+        if (down & HidNpadButton_AnyLeft) { select(0); return true; }
+        if (down & HidNpadButton_AnyRight) { select(1); return true; }
+        return false;
+    }
+};
 class Gui : public tsl::Gui {
     tsl::elm::ListItem* state_ = nullptr;
     tsl::elm::ListItem* detail_ = nullptr;
@@ -122,11 +146,13 @@ class Gui : public tsl::Gui {
     tsl::elm::ListItem* error_ = nullptr;
     tsl::elm::ListItem* firmware_ = nullptr;
     tsl::elm::ListItem* launch_ = nullptr;
-    SettingItem* settings_[3]{};
+    SettingItem* settings_[4]{};
+    ChoiceItem<StickMode>* stickMode_ = nullptr;
+    ChoiceItem<ArcadeOutput>* arcadeOutput_ = nullptr;
     u64 lastPoll_ = 0;
 public:
     tsl::elm::Element* createUI() override {
-        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "1.0.0-beta.1");
+        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "1.1.0-beta.1");
         auto* list = new tsl::elm::List();
         state_ = new tsl::elm::ListItem("后台状态");
         list->addItem(state_);
@@ -160,9 +186,14 @@ public:
         });
         list->addItem(stop);
         list->addItem(new tsl::elm::CategoryHeader("外观与手感 · 左右调整"));
+        stickMode_=new ChoiceItem("摇杆模式",&draft.stick_mode,"模拟","街机八方向");
+        arcadeOutput_=new ChoiceItem("街机输出",&draft.arcade_output,"十字键","左摇杆");
+        list->addItem(stickMode_);
+        list->addItem(arcadeOutput_);
         settings_[0] = new SettingItem("不透明度",&draft.opacity,10,80);
         settings_[1] = new SettingItem("控件大小",&draft.scale,75,125);
-        settings_[2] = new SettingItem("摇杆死区",&draft.deadzone,5,30);
+        settings_[2] = new SettingItem("模拟摇杆死区",&draft.deadzone,5,30);
+        settings_[3] = new SettingItem("街机回中区",&draft.arcade_deadzone,5,30);
         for (auto* setting : settings_) list->addItem(setting);
         auto* save = new tsl::elm::ListItem("保存设置");
         save->setClickListener([](u64 keys) {
@@ -209,13 +240,15 @@ public:
         const auto info = message.empty() ? std::string(reasonName(status.reason)) : message;
         if (info_->getText() != info) info_->setText(info);
         for (auto* setting : settings_) setting->sync();
+        stickMode_->sync();
+        arcadeOutput_->sync();
     }
 };
 class Overlay : public tsl::Overlay {
     void initServices() override {
         sdMounted=R_SUCCEEDED(fsdevMountSdmc());
         if (sdMounted) trace.open("sdmc:/config/touchpad/overlay.log","sdmc:/config/touchpad/overlay.previous.log");
-        trace.write("1.0.0-beta.1-overlay-start");
+        trace.write("1.1.0-beta.1-overlay-start");
         if (call(Command::Status)) draft = status.settings;
     }
     void onShow() override {

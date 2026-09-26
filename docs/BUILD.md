@@ -44,7 +44,7 @@ python3 scripts/check_artifacts.py
 
 `make test` 输出为 `build/host/core-tests`，并生成实际绘图逻辑的 `layout.ppm` 预览。Switch 编译产物和日志位于 `build/switch`。
 
-发布流程提供 `dist/touchpad-1.0.0-beta.1-sd.zip`、`dist/touchpad-1.0.0-beta.1-source.zip`、`dist/SHA256SUMS`。源码包包含修改后的 libtesla、构建脚本和测试；二进制包与源码包各自包含源码文件摘要以便对应。
+发布流程提供 `dist/touchpad-1.1.0-beta.1-sd.zip`、`dist/touchpad-1.1.0-beta.1-source.zip`、`dist/SHA256SUMS`。源码包包含修改后的 libtesla、构建脚本和测试；二进制包与源码包各自包含源码文件摘要以便对应。
 
 ## 本地 libtesla 修改
 
@@ -57,3 +57,5 @@ python3 scripts/check_artifacts.py
 `v0.1.1-rc10` 保存真机确认可用的原始源码；`v1.0.0-beta.1` 保存 Beta 版本与发布资料。两者运行代码差异仅为版本字符串和启动日志标识。安装包、匹配源码包和 `dist/touchpad-1.0.0-beta.1-SHA256SUMS` 为发布附件，不将下载工具链、构建输出或原始设备日志纳入 Git。
 
 `build-info.json` 的 `hardware_verified` 表示本次重新构建的二进制是否独立实测，当前为 false；`hardware_validation` 单独记录已通过用户实测的 rc10 基线和确认范围，避免把构建成功当作额外实机验收。发布标签的说明附带两个 ZIP 的 SHA-256，可将本地附件与 Git 标签对应。
+
+当前 `feat/arcade-stick` 分支生成 1.1.0-beta.1，新增独立八方向测试；上节的 1.0 Beta 标签及原始附件保留。1.1 的 `hardware_verified` 为 false，待安装后进行街机方向与搓招验证。
