@@ -1,0 +1,6 @@
+.deps/
+downloads/
+build/
+dist/
+*.DS_Store
+

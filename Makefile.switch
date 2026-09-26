@@ -1,0 +1,57 @@
+.DEFAULT_GOAL := all
+include $(DEVKITPRO)/libnx/switch_rules
+export PATH := $(DEVKITPRO)/tools/bin:$(DEVKITPRO)/devkitA64/bin:$(PATH)
+CXX := $(DEVKITPRO)/devkitA64/bin/aarch64-none-elf-g++
+ARCH := -march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+CXXFLAGS := $(ARCH) -std=gnu++20 -O2 -g -Wall -Wextra -Werror -Wno-missing-field-initializers -ffunction-sections -fdata-sections -fno-exceptions -D__SWITCH__ -I. -isystem third_party/libtesla/include -isystem $(DEVKITPRO)/libnx/include
+LINK := $(CXX) $(ARCH) -specs=$(DEVKITPRO)/libnx/switch.specs -L$(DEVKITPRO)/libnx/lib
+CORE := build/switch/touch/core.o build/switch/common/config.o
+BACKEND := $(CORE) build/switch/common/storage.o build/switch/touch/draw.o build/switch/sysmodule/main.o build/switch/sysmodule/render.o build/switch/sysmodule/server.o
+OVERLAY := $(CORE) build/switch/overlay/main.o
+TESTER := $(CORE) build/switch/tester/main.o
+.PHONY: all
+all: build/switch/touchpad.nsp build/switch/touchpad.ovl build/switch/touchpad-test.nro build/switch/touchpad-diag.nro build/switch/touchpad-probe.nsp
+build/switch/%.o: %.cpp Makefile.switch
+	@mkdir -p $(dir $@)
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
+build/switch/touchpad.elf: $(BACKEND)
+	$(LINK) $^ -lnx -Wl,-Map,build/switch/touchpad.map -o $@
+build/switch/touchpad-overlay.elf: $(OVERLAY)
+	$(LINK) $^ -lnx -Wl,-Map,build/switch/touchpad-overlay.map -o $@
+build/switch/touchpad-test.elf: $(TESTER)
+	$(LINK) $^ -lnx -Wl,-Map,build/switch/touchpad-test.map -o $@
+build/switch/touchpad-diag.elf: build/switch/diagnostic/main.o
+	$(LINK) $^ -lnx -Wl,-Map,build/switch/touchpad-diag.map -o $@
+build/switch/touchpad-diag.nacp: Makefile.switch
+	nacptool --create 'Touchpad Diag' 'Touchpad contributors' '0.3.4' $@
+build/switch/touchpad-diag.nro: build/switch/touchpad-diag.elf build/switch/touchpad-diag.nacp
+	elf2nro $< $@ --nacp=build/switch/touchpad-diag.nacp --icon=$(DEVKITPRO)/libnx/default_icon.jpg
+build/switch/touchpad.nso: build/switch/touchpad.elf
+	elf2nso $< $@
+build/switch/touchpad.npdm: sysmodule/touchpad.json
+	npdmtool $< $@
+build/switch/touchpad.nsp: build/switch/touchpad.nso build/switch/touchpad.npdm
+	@mkdir -p build/switch/exefs
+	cp build/switch/touchpad.nso build/switch/exefs/main
+	cp build/switch/touchpad.npdm build/switch/exefs/main.npdm
+	build_pfs0 build/switch/exefs $@
+build/switch/touchpad-probe.elf: build/switch/probe/main.o
+	$(LINK) $^ -lnx -Wl,-Map,build/switch/touchpad-probe.map -o $@
+build/switch/touchpad-probe.nso: build/switch/touchpad-probe.elf
+	elf2nso $< $@
+build/switch/touchpad-probe.npdm: probe/probe.json
+	npdmtool $< $@
+build/switch/touchpad-probe.nsp: build/switch/touchpad-probe.nso build/switch/touchpad-probe.npdm
+	@mkdir -p build/switch/probe-exefs
+	cp build/switch/touchpad-probe.nso build/switch/probe-exefs/main
+	cp build/switch/touchpad-probe.npdm build/switch/probe-exefs/main.npdm
+	build_pfs0 build/switch/probe-exefs $@
+build/switch/touchpad-overlay.nacp: Makefile.switch
+	nacptool --create 'Touchpad' 'Touchpad contributors' '0.1.1-rc10' $@
+build/switch/touchpad.ovl: build/switch/touchpad-overlay.elf build/switch/touchpad-overlay.nacp
+	elf2nro $< $@ --nacp=build/switch/touchpad-overlay.nacp
+build/switch/touchpad-test.nacp: Makefile.switch
+	nacptool --create 'Touchpad Input Test' 'Touchpad contributors' '0.1.1-rc10' $@
+build/switch/touchpad-test.nro: build/switch/touchpad-test.elf build/switch/touchpad-test.nacp
+	elf2nro $< $@ --nacp=build/switch/touchpad-test.nacp --icon=$(DEVKITPRO)/libnx/default_icon.jpg
+-include $(BACKEND:.o=.d) $(OVERLAY:.o=.d) $(TESTER:.o=.d) build/switch/diagnostic/main.d build/switch/probe/main.d
