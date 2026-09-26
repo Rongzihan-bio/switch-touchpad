@@ -17,7 +17,7 @@ def tree_hash(paths):
     return h.hexdigest()
 
 def release_sources():
-    paths = [ROOT/name for name in ('.gitignore','LICENSE','README.md','THIRD_PARTY.md','Makefile','Makefile.switch','toolchain.lock.json')]
+    paths = [ROOT/name for name in ('.gitignore','Agent.md','LICENSE','README.md','THIRD_PARTY.md','Makefile','Makefile.switch','toolchain.lock.json')]
     for directory in CODE_DIRS + ('docs','scripts','tests'):
         paths += [p for p in (ROOT/directory).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.name != '.DS_Store']
     return sorted(paths)

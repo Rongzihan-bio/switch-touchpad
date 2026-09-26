@@ -42,7 +42,7 @@ check()
 if source_hash != tree_hash(compiler_inputs()):
     sys.exit('Compiler inputs changed during the build; rebuild before packaging.')
 (ROOT/'build/switch/build-info.json').write_text(json.dumps({
-    'version':'0.1.1-rc10', 'built_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    'version':'1.0.0-beta.1', 'built_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
     'compiler_inputs_sha256':source_hash, 'image_digest':image,
     'packages':{k:manifest['packages'][k] for k in ('devkitA64','libnx','switch-tools','devkita64-gcc')},
     'hardware_verified':False

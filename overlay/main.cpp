@@ -126,7 +126,7 @@ class Gui : public tsl::Gui {
     u64 lastPoll_ = 0;
 public:
     tsl::elm::Element* createUI() override {
-        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "0.1.1-rc10 · 加载兼容修正版");
+        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "1.0.0-beta.1");
         auto* list = new tsl::elm::List();
         state_ = new tsl::elm::ListItem("后台状态");
         list->addItem(state_);
@@ -215,7 +215,7 @@ class Overlay : public tsl::Overlay {
     void initServices() override {
         sdMounted=R_SUCCEEDED(fsdevMountSdmc());
         if (sdMounted) trace.open("sdmc:/config/touchpad/overlay.log","sdmc:/config/touchpad/overlay.previous.log");
-        trace.write("rc10-overlay-start");
+        trace.write("1.0.0-beta.1-overlay-start");
         if (call(Command::Status)) draft = status.settings;
     }
     void onShow() override {

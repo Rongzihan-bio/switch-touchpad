@@ -23,7 +23,7 @@ int main() {
         if (now-last >= 100) {
             last = now;
             rc = client.call(touchpad::Request{},status);
-            std::printf("\x1b[2J\x1b[HTouchpad Input Test 0.1.1-rc10   (+ exits)\n\n");
+            std::printf("\x1b[2J\x1b[HTouchpad Input Test 1.0.0-beta.1   (+ exits)\n\n");
             const auto mode=appletGetAppletType();
             const bool app=mode==AppletType_Application || mode==AppletType_SystemApplication;
             std::printf("Mode: %s\n",app ? "APPLICATION" : "APPLET - reopen hbmenu holding R while starting a game");

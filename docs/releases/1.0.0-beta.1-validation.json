@@ -1,0 +1,34 @@
+{
+  "report_date": "2026-09-26",
+  "source": "user confirmation in this development session",
+  "user_report": "OK成功了，手柄后台和前台问题已经解决",
+  "tested_version": "0.1.1-rc10",
+  "baseline_git_tag": "v0.1.1-rc10",
+  "baseline_git_commit": "6f144963b0a6c14df646eba8c01f1fea2f105fc5",
+  "tested_sd_package_sha256": "397d6eb729b6586c3d175f86089c3dfe89b21258ffe6a7ca4778c4d333f99c0d",
+  "tested_program_sha256": {
+    "atmosphere/contents/4200000054504144/exefs.nsp": "dfdf8cd014581f4978d9209ee33a1a708ed2ab6c9f6e1180d8c5aaff39cb05c5",
+    "switch/.overlays/touchpad.ovl": "71359e7274cc7e4f6cb8382bab919a996b7d8c9e26fddfd192a4fec45463bea7",
+    "switch/touchpad-test/touchpad-test.nro": "7f0d62ae278f50d3e457ed9cf2ff465aa4f0aaa64983ae9bb67e08beace2016c",
+    "switch/touchpad-diag/touchpad-diag.nro": "1009586475590c76df7640e1e061e1593eed4df6c249b0384e161ee2865dcd44"
+  },
+  "environment_user_reported": {
+    "device": "Nintendo Switch OLED",
+    "system": "22.5.0 AMS 1.11.2 |E",
+    "overlay": "Tesla; exact menu/loader versions not supplied"
+  },
+  "confirmed_scope": [
+    "backend and frontend issues resolved in user-tested scenarios",
+    "in-game controls and touch input working",
+    "success reported after the render-delay fix"
+  ],
+  "release_version": "1.0.0-beta.1",
+  "runtime_changes_from_tested_baseline": "version labels and startup log labels only",
+  "release_binaries_retested_on_hardware": false,
+  "remaining_validation": [
+    "named game compatibility and performance",
+    "30-minute-or-longer measured stability",
+    "full HOME/sleep/system-applet lifecycle matrix",
+    "older rc9 late HDLS error 001C24CA not separately diagnosed"
+  ]
+}

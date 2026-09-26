@@ -12,11 +12,13 @@ from project_files import compiler_inputs, tree_hash, release_sources
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'build/switch'
 DIST = ROOT/'dist'
-VERSION = '0.1.1-rc10'
+VERSION = '1.0.0-beta.1'
 if VERSION == '0.1.0':
     raise SystemExit('Release 0.1.0 is blocked after an on-device boot failure. See docs/BOOT_FAILURE.md; do not redistribute or overwrite this release.')
 check()
 info = json.loads((OUT/'build-info.json').read_text())
+if info['version'] != VERSION:
+    raise SystemExit('Build version differs from release version. Run make build first.')
 if info['compiler_inputs_sha256'] != tree_hash(compiler_inputs()):
     raise SystemExit('Source changed after the last Switch build. Run make build first.')
 test = subprocess.run(['make','test'],cwd=ROOT,text=True,stdout=subprocess.PIPE,stderr=subprocess.STDOUT)
@@ -24,7 +26,8 @@ print(test.stdout,end='')
 (ROOT/'build/host/test.log').write_text(test.stdout)
 if test.returncode: raise SystemExit(test.returncode)
 info['autostart'] = False
-info['release_status'] = 'render delays no longer stop healthy input; hardware validation pending'
+info['release_status'] = 'beta; based on user-confirmed rc10; runtime changes limited to version labels'
+info['hardware_validation'] = json.loads((ROOT/'docs/releases/1.0.0-beta.1-validation.json').read_text())
 info['backend_memory'] = {'physical_pool':'Applet', 'pm_resource_group':'Applet', 'fixed_heap_bytes':4*1024*1024, 'main_stack_bytes':65536}
 info['diagnostic_version'] = '0.3.4'
 info['host_test_result'] = test.stdout.strip().splitlines()[-1]
@@ -36,7 +39,7 @@ stage = DIST/'sd'
 if stage.exists(): shutil.rmtree(stage)
 module = stage/'atmosphere/contents/4200000054504144'
 module.mkdir(parents=True)
-# Explicitly manual launch: never ship a boot2.flag in this diagnostic release.
+# Explicitly manual launch: never ship a boot2.flag in this beta release.
 shutil.copy2(OUT/'touchpad.nsp',module/'exefs.nsp')
 (stage/'switch/.overlays').mkdir(parents=True)
 shutil.copy2(OUT/'touchpad.ovl',stage/'switch/.overlays/touchpad.ovl')
@@ -75,6 +78,8 @@ with zipfile.ZipFile(source_zip,'w') as z:
     write_entry(z,prefix+'BUILD-INFO.json',json.dumps(info,indent=2).encode()+b'\n')
 for p in (binary_zip,source_zip):
     with zipfile.ZipFile(p) as z: assert z.testzip() is None
-(DIST/'SHA256SUMS').write_text(''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in (binary_zip,source_zip)))
+checksums = ''.join(f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}\n' for p in (binary_zip,source_zip))
+(DIST/'SHA256SUMS').write_text(checksums)
+(DIST/f'touchpad-{VERSION}-SHA256SUMS').write_text(checksums)
 print(f'Packaged {binary_zip.name} ({binary_zip.stat().st_size} bytes)')
 print(f'Packaged {source_zip.name} ({source_zip.stat().st_size} bytes)')

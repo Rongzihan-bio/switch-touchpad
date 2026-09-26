@@ -7,7 +7,7 @@
 namespace touchpad {
 constexpr uint32_t ProtocolVersion = 1;
 constexpr const char* ServiceName = "touchpad";
-constexpr const char* Version = "0.1.1-rc10";
+constexpr const char* Version = "1.0.0-beta.1";
 constexpr uint64_t TimeoutMs = 250;
 constexpr uint64_t RenderDelayNoticeMs = 250;
 constexpr uint64_t ButtonA = 1ULL << 0, ButtonB = 1ULL << 1;
