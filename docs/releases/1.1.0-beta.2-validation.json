@@ -1,0 +1,23 @@
+{
+  "release_version": "1.1.0-beta.2",
+  "feature": "L1/L2/R1/R2 and touch edge swipe, includes arcade eight-way mode",
+  "hardware_verified": false,
+  "baseline_git_tag": "v1.0.0-beta.1",
+  "shoulder_mapping": {
+    "L1": "L",
+    "L2": "ZL",
+    "R1": "R",
+    "R2": "ZR"
+  },
+  "stick_clicks": false,
+  "sd_menu": "existing Ultrahand; enable swipe_to_open only; keep menu and loader binaries",
+  "touchpad_swipe": "single new finger from configured edge; finish within 150ms; discard opening touch until release; existing onShow Pause/detach barrier",
+  "required_hardware_validation": [
+    "cold boot menu swipe without controller",
+    "sleep/wake then swipe into Touchpad and enable",
+    "all shoulders received and released in Input Test",
+    "shoulder plus stick and ABXY multi-touch",
+    "arcade directions and fighting feel",
+    "existing game-load and physical controller behavior"
+  ]
+}

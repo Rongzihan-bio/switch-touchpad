@@ -187,7 +187,7 @@ static void configuration() {
     r = {}; r.size--; CHECK(!valid(r));
     r = {}; r.reserved = 1; CHECK(!valid(r)); r = {}; r.command = static_cast<Command>(99); CHECK(!valid(r));
     PadState p; p.lx = 32768; CHECK(!valid(p)); p = {}; p.rx = 1; CHECK(!valid(p));
-    p = {}; p.buttons = ButtonL|ButtonR; CHECK(!valid(p) && valid(p,true));
+    p = {}; p.buttons = ButtonL|ButtonR; CHECK(valid(p) && valid(p,true));
 }
 static void rendering() {
     // Half-resolution renderer must stay within its smaller buffer and preserve

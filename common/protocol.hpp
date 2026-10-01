@@ -7,13 +7,14 @@
 namespace touchpad {
 constexpr uint32_t ProtocolVersion = 2;
 constexpr const char* ServiceName = "touchpad";
-constexpr const char* Version = "1.1.0-beta.1";
+constexpr const char* Version = "1.1.0-beta.2";
 constexpr uint64_t TimeoutMs = 250;
 constexpr uint64_t RenderDelayNoticeMs = 250;
 constexpr uint64_t ButtonA = 1ULL << 0, ButtonB = 1ULL << 1;
 constexpr uint64_t ButtonX = 1ULL << 2, ButtonY = 1ULL << 3;
 constexpr uint64_t ButtonL = 1ULL << 6, ButtonR = 1ULL << 7;
-constexpr uint64_t TouchButtons = ButtonA | ButtonB | ButtonX | ButtonY;
+constexpr uint64_t ButtonZL = 1ULL << 8, ButtonZR = 1ULL << 9;
+constexpr uint64_t TouchButtons = ButtonA | ButtonB | ButtonX | ButtonY | ButtonL | ButtonR | ButtonZL | ButtonZR;
 constexpr uint64_t ButtonLeft = 1ULL << 12, ButtonUp = 1ULL << 13;
 constexpr uint64_t ButtonRight = 1ULL << 14, ButtonDown = 1ULL << 15;
 constexpr uint64_t DirectionButtons = ButtonLeft | ButtonUp | ButtonRight | ButtonDown;

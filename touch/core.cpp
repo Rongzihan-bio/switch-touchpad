@@ -11,7 +11,9 @@ static bool inside(const Circle& c, const Point& p) {
 Layout Layout::make(const Settings& s) {
     const float f = s.scale / 100.0f;
     return {{180, 540, 100*f}, {{{1100+75*f,540,36*f}, {1100,540+75*f,36*f},
-                               {1100,540-75*f,36*f}, {1100-75*f,540,36*f}}}};
+                               {1100,540-75*f,36*f}, {1100-75*f,540,36*f},
+                               {120,350,36*f}, {240,350,36*f},
+                               {1040,350,36*f}, {1160,350,36*f}}}};
 }
 bool valid(const Touches& t) {
     if (t.count > t.points.size()) return false;
@@ -52,10 +54,10 @@ PadState Mapper::update(const Touches& t, const Settings& s) {
             out.ly = static_cast<int32_t>(std::lround(y / length * magnitude * 32767));
         }
     }
-    constexpr uint64_t bits[] = {ButtonA, ButtonB, ButtonX, ButtonY};
     for (uint32_t i = 0; i < t.count; ++i) {
         if (captured_ && t.points[i].id == owner_) continue;
-        for (size_t j = 0; j < 4; ++j) if (inside(layout.buttons[j], t.points[i])) out.buttons |= bits[j];
+        for (size_t j = 0; j < layout.buttons.size(); ++j)
+            if (inside(layout.buttons[j], t.points[i])) out.buttons |= Layout::ButtonBits[j];
     }
     previous_ = t;
     return out;

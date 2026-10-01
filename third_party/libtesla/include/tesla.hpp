@@ -21,6 +21,7 @@
 
 #include <switch.h>
 #include "common/layer_stacks.hpp"
+#include "common/edge_swipe.hpp"
 
 #include <stdlib.h>
 #include <strings.h>
@@ -29,6 +30,8 @@
 #include <algorithm>
 #include <atomic>
 #include <cstring>
+#include <cctype>
+#include <cstdlib>
 #include <cwctype>
 #include <string>
 #include <functional>
@@ -346,7 +349,8 @@ namespace tsl {
 
                 std::string lastHeader = "";
                 for (auto& line : lines) {
-                    line.erase(std::remove_if(line.begin(), line.end(), ::isspace), line.end());
+                    line.erase(std::remove_if(line.begin(), line.end(), [](unsigned char c) { return std::isspace(c); }), line.end());
+                    if (line.empty() || line[0] == '#' || line[0] == ';') continue;
 
                     if (line[0] == '[' && line[line.size() - 1] == ']') {
                         lastHeader = line.substr(1, line.size() - 2);
@@ -385,7 +389,7 @@ namespace tsl {
              *
              * @return Settings data
              */
-            static IniData readOverlaySettings() {
+            static IniData readOverlaySettings(const char* path = CONFIG_FILE) {
                 /* Open Sd card filesystem. */
                 FsFileSystem fsSdmc;
                 if (R_FAILED(fsOpenSdCardFileSystem(&fsSdmc)))
@@ -394,7 +398,7 @@ namespace tsl {
 
                 /* Open config file. */
                 FsFile fileConfig;
-                if (R_FAILED(fsFsOpenFile(&fsSdmc, CONFIG_FILE, FsOpenMode_Read, &fileConfig)))
+                if (R_FAILED(fsFsOpenFile(&fsSdmc, path, FsOpenMode_Read, &fileConfig)))
                     return {};
                 hlp::ScopeGuard fileGuard([&] { fsFileClose(&fileConfig); });
 
@@ -402,6 +406,7 @@ namespace tsl {
                 s64 configFileSize;
                 if (R_FAILED(fsFileGetSize(&fileConfig, &configFileSize)))
                     return {};
+                if (configFileSize < 0 || configFileSize > 65536) return {};
 
                 /* Read and parse config file. */
                 std::string configFileData(configFileSize, '\0');
@@ -3123,12 +3128,21 @@ namespace tsl {
          * @param rightJoyStick Right joystick position
          * @return Weather or not the input has been consumed
          */
-        void handleInput(u64 keysDown, u64 keysHeld, bool touchDetected, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) {
+        void handleInput(u64 keysDown, u64 keysHeld, bool touchDetected, const HidTouchState &touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight, bool reset = false) {
             static HidTouchState initialTouchPos = { 0 };
             static HidTouchState oldTouchPos = { 0 };
             static bool oldTouchDetected = false;
             static elm::TouchEvent touchEvent;
             static u32 repeatTick = 0;
+
+            if (reset) {
+                initialTouchPos = oldTouchPos = {};
+                oldTouchDetected = false;
+                touchEvent = elm::TouchEvent::Touch;
+                repeatTick = 0;
+                elm::Element::setInputMode(InputMode::Controller);
+                return;
+            }
 
             auto& currentGui = this->getCurrentGui();
 
@@ -3388,6 +3402,22 @@ namespace tsl {
                 tsl::cfg::launchCombo = decodedKeys;
         }
 
+        static touchpad::SwipeSettings parseSwipeSettings() {
+            auto config = hlp::ini::readOverlaySettings("/config/ultrahand/config.ini");
+            auto& values = config["ultrahand"];
+            touchpad::SwipeSettings out;
+            out.enabled = values["swipe_to_open"] == "true";
+            out.right = values["right_alignment"] == "true";
+            const auto& offset = values["swipe_offset"];
+            if (!offset.empty()) {
+                char* end = nullptr;
+                const long value = std::strtol(offset.c_str(),&end,10);
+                if (end != offset.c_str() && *end == '\0' && value >= 0 && value <= 200)
+                    out.offset = static_cast<int>(value);
+            }
+            return out;
+        }
+
         /**
          * @brief Update and save launch combo keys
          *
@@ -3424,6 +3454,9 @@ namespace tsl {
 
             // Parse Tesla settings
             impl::parseOverlaySettings();
+            const auto swipeSettings = impl::parseSwipeSettings();
+            touchpad::EdgeSwipe swipe;
+            bool consumeTouch = true;
 
             // Configure input to take all controllers and up to 8
             padConfigureInput(8, HidNpadStyleSet_NpadStandard | HidNpadStyleTag_NpadSystemExt);
@@ -3465,16 +3498,41 @@ namespace tsl {
                     shData->joyStickPosRight = padGetStickPos(&pad, 1);
 
                     // Read in touch positions
-                    if (hidGetTouchScreenStates(&shData->touchState, 1) == 0)
-                        shData->touchState = { 0 };
+                    HidTouchScreenState raw{};
+                    const bool touchAvailable = hidGetTouchScreenStates(&raw, 1) > 0;
+                    shData->touchState = {};
+                    if (touchAvailable && raw.count >= 0 && raw.count <= 16) {
+                        for (s32 i = 0; i < raw.count; ++i) {
+                            if (!(raw.touches[i].attributes & HidTouchAttribute_End))
+                                shData->touchState.touches[shData->touchState.count++] = raw.touches[i];
+                        }
+                    }
+                    const auto& first = shData->touchState.touches[0];
+                    const bool validTouch = touchAvailable && raw.count >= 0 && raw.count <= 16;
+                    if (swipe.update(swipeSettings,validTouch,!shData->overlayOpen,
+                                     shData->touchState.count,first.finger_id,first.x,first.y,
+                                     armTicksToNs(armGetSystemTick())/1000000)) {
+                        // Use the same UI-thread onShow pause/detach barrier as
+                        // the key combo. This polling thread never performs IPC.
+                        consumeTouch = true;
+                        eventFire(&shData->comboEvent);
+                    }
 
                     if (((shData->keysHeld & tsl::cfg::launchCombo) == tsl::cfg::launchCombo) && shData->keysDown & tsl::cfg::launchCombo) {
                         if (shData->overlayOpen) {
                             tsl::Overlay::get()->hide(2);
                             shData->overlayOpen = false;
                         }
-                        else
+                        else {
+                            consumeTouch = true;
                             eventFire(&shData->comboEvent);
+                        }
+                    }
+
+                    // The opening swipe must not click a menu item on release.
+                    if (consumeTouch) {
+                        if (validTouch && shData->touchState.count == 0) consumeTouch = false;
+                        shData->touchState = {};
                     }
 
                     shData->keysDownPending |= shData->keysDown;
@@ -3484,6 +3542,8 @@ namespace tsl {
                 s32 idx = 0;
                 Result rc = waitObjects(&idx, objects, WaiterObject_Count, 20'000'000ul);
                 if (R_SUCCEEDED(rc)) {
+                    swipe.cancel();
+                    consumeTouch = true;
                     if (shData->overlayOpen) {
                         tsl::Overlay::get()->hide(idx==WaiterObject_HomeButton ? 4 : 8);
                         shData->overlayOpen = false;
@@ -3597,7 +3657,13 @@ namespace tsl {
             overlay->onLifecycle("focus-take-begin");
             overlay->onFocusChange(true, hlp::requestForeground(true));
             overlay->clearScreen();
-
+            // Discard input accumulated during gameplay and any pre-sleep
+            // unfinished menu touch; neither may activate a newly shown item.
+            {
+                std::scoped_lock lock(shData.dataMutex);
+                shData.keysDownPending = 0;
+            }
+            overlay->handleInput(0,0,false,{},{},{},true);
 
             while (shData.running) {
                 overlay->loop();
