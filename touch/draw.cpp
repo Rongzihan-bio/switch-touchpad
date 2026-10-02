@@ -22,12 +22,13 @@ static void circle(uint16_t* pixels, uint32_t stride, Circle c, uint16_t fill, u
 }
 static void label(uint16_t* pixels, uint32_t stride, int cx, int cy, const char* text, uint16_t c, int scale, unsigned divisor) {
     cx /= divisor; cy /= divisor; scale = std::max(1, scale/static_cast<int>(divisor));
-    constexpr char characters[] = "ABXYLR12";
-    constexpr uint8_t letters[8][7] = {
+    constexpr char characters[] = "ABXYLR12-+";
+    constexpr uint8_t letters[10][7] = {
         {14,17,17,31,17,17,17}, {30,17,17,30,17,17,30},
         {17,17,10,4,10,17,17}, {17,17,10,4,4,4,4},
         {16,16,16,16,16,16,31}, {30,17,17,30,20,18,17},
-        {4,12,4,4,4,4,14}, {14,17,1,2,4,8,31}
+        {4,12,4,4,4,4,14}, {14,17,1,2,4,8,31},
+        {0,0,0,31,0,0,0}, {0,4,4,31,4,4,0}
     };
     const int length = static_cast<int>(std::strlen(text));
     for (int n = 0; n < length; ++n) {

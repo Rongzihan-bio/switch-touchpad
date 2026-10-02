@@ -2,6 +2,7 @@
 #include <switch.h>
 #include "common/client.hpp"
 #include "touch/arcade.hpp"
+#include "tester/exit_chord.hpp"
 #include <cstdio>
 
 int main() {
@@ -13,18 +14,20 @@ int main() {
     padConfigureInput(8,HidNpadStyleSet_NpadStandard);
     PadState exitPad;
     padInitializeAny(&exitPad);
+    touchpad::TestExitChord exitChord;
+    static_assert(touchpad::ButtonPlus == HidNpadButton_Plus && touchpad::ButtonMinus == HidNpadButton_Minus);
     touchpad::Client client;
     touchpad::Status status;
     Result rc = 0;
     u64 last = 0;
     while (appletMainLoop()) {
         padUpdate(&exitPad);
-        if (padGetButtonsDown(&exitPad) & HidNpadButton_Plus) break;
         const u64 now = armTicksToNs(armGetSystemTick())/1000000;
+        if (exitChord.update(padGetButtons(&exitPad),now)) break;
         if (now-last >= 100) {
             last = now;
             rc = client.call(touchpad::Request{},status);
-            std::printf("\x1b[2J\x1b[HTouchpad Input Test 1.1.0-beta.2   (+ exits)\n\n");
+            std::printf("\x1b[2J\x1b[HTouchpad Input Test 1.1.0-beta.3   (hold + and - for 2s to exit)\n\n");
             const auto mode=appletGetAppletType();
             const bool app=mode==AppletType_Application || mode==AppletType_SystemApplication;
             std::printf("Mode: %s\n",app ? "APPLICATION" : "APPLET - reopen hbmenu holding R while starting a game");
@@ -46,7 +49,8 @@ int main() {
                     !!(state.buttons&HidNpadButton_R),!!(state.buttons&HidNpadButton_ZR),
                     static_cast<unsigned long long>(state.buttons));
                 touchpad::PadState received{state.buttons,state.analog_stick_l.x,state.analog_stick_l.y,0,0};
-                std::printf("   DPad U:%u D:%u L:%u R:%u  direction:%u (5=neutral)\n",
+                std::printf("   +:%u -:%u  DPad U:%u D:%u L:%u R:%u  direction:%u (5=neutral)\n",
+                    !!(state.buttons&HidNpadButton_Plus),!!(state.buttons&HidNpadButton_Minus),
                     !!(state.buttons&HidNpadButton_Up),!!(state.buttons&HidNpadButton_Down),
                     !!(state.buttons&HidNpadButton_Left),!!(state.buttons&HidNpadButton_Right),
                     static_cast<unsigned>(touchpad::padDirection(received)));

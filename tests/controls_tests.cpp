@@ -2,6 +2,7 @@
 #include "touch/core.hpp"
 #include "touch/draw.hpp"
 #include "common/edge_swipe.hpp"
+#include "tester/exit_chord.hpp"
 #include <cassert>
 #include <cmath>
 #include <cstdio>
@@ -29,9 +30,9 @@ static void shoulders() {
                 assert(mapper.update(t,s).buttons==Layout::ButtonBits[i]);
             }
             assert(mapper.update({},s).buttons==0);
-            Touches t; t.count=9;
+            Touches t; t.count=static_cast<uint32_t>(l.buttons.size()+1);
             t.points[0]={0,l.stick.x+l.stick.radius,l.stick.y};
-            for (unsigned i=0;i<8;++i) t.points[i+1]={i+1,l.buttons[i].x,l.buttons[i].y};
+            for (unsigned i=0;i<l.buttons.size();++i) t.points[i+1]={i+1,l.buttons[i].x,l.buttons[i].y};
             auto p=mapper.update(t,s);
             assert((p.buttons&TouchButtons)==TouchButtons && valid(p));
             assert(mode==StickMode::Analog ? p.lx==32767 : !!(p.buttons&ButtonRight));
@@ -59,6 +60,54 @@ static void shoulders() {
     assert(e.state().pad.buttons==(ButtonL|ButtonZL|ButtonR|ButtonZR));
     sample.sleep=true; ++sample.counter; e.tick(sample,48);
     assert(e.state().mode==Mode::Paused && e.state().pad.buttons==0);
+}
+static void menuButtons() {
+    assert(ButtonPlus==0x400 && ButtonMinus==0x800);
+    assert(!valid(PadState{ButtonPlus},true) && !valid(PadState{ButtonMinus},true));
+    assert(!valid(PadState{1ULL<<18}) && !valid(PadState{1ULL<<19})); // no HOME/Capture
+    const auto l=Layout::make({});
+    for (unsigned index : {8U,9U}) {
+        Mapper mapper; Touches t; t.count=2;
+        t.points[0]={1,l.buttons[index].x,l.buttons[index].y};
+        t.points[1]=t.points[0]; t.points[1].id=2;
+        assert(mapper.update(t,{}).buttons==Layout::ButtonBits[index]);
+        t.count=1; assert(mapper.update(t,{}).buttons==Layout::ButtonBits[index]);
+        t.points[0].x+=l.buttons[index].radius+1;
+        assert(mapper.update(t,{}).buttons==0);
+    }
+    for (unsigned event=0;event<5;++event) {
+        Engine e; Sample sample; sample.available=true; sample.application_pid=1;
+        assert(e.prepare(false,1,0)==Error::Ok);
+        assert(e.commit(e.state().token,0)==Error::Ok);
+        sample.counter=1; e.tick(sample,16);
+        sample.touches.count=2;
+        sample.touches.points[0]={1,l.buttons[8].x,l.buttons[8].y};
+        sample.touches.points[1]={2,l.buttons[9].x,l.buttons[9].y};
+        ++sample.counter; e.tick(sample,32);
+        assert(e.state().mode==Mode::Active && e.state().pad.buttons==(ButtonMinus|ButtonPlus));
+        switch (event) {
+            case 0: sample.home=true; break;
+            case 1: sample.sleep=true; break;
+            case 2: sample.tesla=true; break;
+            case 3: sample.application_pid=2; break;
+            case 4: e.stop(Reason::User); break;
+        }
+        ++sample.counter; e.tick(sample,48);
+        assert(e.state().mode==Mode::Paused && e.state().pad.buttons==0);
+    }
+    TestExitChord exit;
+    constexpr auto both=ButtonPlus|ButtonMinus;
+    for (uint64_t now=0;now<2500;now+=20) assert(!exit.update(ButtonPlus,now));
+    for (uint64_t now=2500;now<5000;now+=20) assert(!exit.update(ButtonMinus,now));
+    for (uint64_t now=5000;now<6500;now+=20) assert(!exit.update(both,now));
+    assert(!exit.update(0,6500)); // a brief release must restart the hold
+    for (uint64_t now=6520;now<8520;now+=20) assert(!exit.update(both,now));
+    assert(exit.update(both,8520));
+    assert(!exit.update(0,8540));
+    assert(!exit.update(both,8560)); assert(!exit.update(both,11000)); // no elapsed sleep time
+    assert(!exit.update(both,100)); // clock reset
+    for (uint64_t now=120;now<2100;now+=20) assert(!exit.update(both,now));
+    assert(exit.update(both,2100));
 }
 static void swipes() {
     SwipeSettings s{true,false,0}; EdgeSwipe swipe;
@@ -100,7 +149,7 @@ static void drawing() {
         const unsigned w=1280/divisor,h=720/divisor;
         std::vector<uint16_t> pixels(w*h+2,0xBEEF), idle;
         draw(pixels.data()+1,w,s,{},true,divisor); idle=pixels;
-        for (unsigned i=4;i<8;++i) {
+        for (unsigned i=4;i<Layout::ButtonBits.size();++i) {
             draw(pixels.data()+1,w,s,PadState{Layout::ButtonBits[i]},true,divisor);
             assert(pixels.front()==0xBEEF && pixels.back()==0xBEEF);
             assert(pixels!=idle && pixels[1+(h/2)*w+w/2]==0);
@@ -113,7 +162,7 @@ static void drawing() {
     // Inspect actual half-resolution framebuffer, upscaled by the compositor.
     s.scale=100; s.stick_mode=StickMode::Arcade8;
     std::vector<uint16_t> pixels(640*360);
-    draw(pixels.data(),640,s,PadState{ButtonL|ButtonZR|ButtonA|ButtonDown|ButtonRight},true,2);
+    draw(pixels.data(),640,s,PadState{ButtonL|ButtonZR|ButtonA|ButtonDown|ButtonRight|ButtonPlus},true,2);
     FILE* f=std::fopen("build/host/controls-preview.ppm","wb"); assert(f);
     std::fprintf(f,"P6\n1280 720\n255\n");
     for (unsigned y=0;y<720;++y) for (unsigned x=0;x<1280;++x) {
@@ -125,6 +174,6 @@ static void drawing() {
     std::fclose(f);
 }
 int main() {
-    shoulders(); swipes(); drawing();
-    std::puts("PASS: shoulder HID mapping, combinations, release, layout, rendering and edge-swipe lifecycle");
+    shoulders(); menuButtons(); swipes(); drawing();
+    std::puts("PASS: shoulder/plus/minus HID mapping, combinations, release, layout, rendering, test exit chord and edge-swipe lifecycle");
 }

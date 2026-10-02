@@ -9,9 +9,9 @@ struct Touches { std::array<Point, 16> points{}; uint32_t count = 0; };
 struct Circle { float x, y, radius; };
 struct Layout {
     Circle stick;
-    static constexpr std::array<uint64_t, 8> ButtonBits{ButtonA, ButtonB, ButtonX, ButtonY, ButtonL, ButtonZL, ButtonR, ButtonZR};
-    static constexpr std::array<const char*, 8> ButtonLabels{"A", "B", "X", "Y", "L1", "L2", "R1", "R2"};
-    std::array<Circle, 8> buttons;
+    static constexpr std::array<uint64_t, 10> ButtonBits{ButtonA, ButtonB, ButtonX, ButtonY, ButtonL, ButtonZL, ButtonR, ButtonZR, ButtonMinus, ButtonPlus};
+    static constexpr std::array<const char*, 10> ButtonLabels{"A", "B", "X", "Y", "L1", "L2", "R1", "R2", "-", "+"};
+    std::array<Circle, 10> buttons;
     static Layout make(const Settings& settings);
 };
 bool valid(const Touches& touches);

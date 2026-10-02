@@ -47,11 +47,11 @@ build/switch/touchpad-probe.nsp: build/switch/touchpad-probe.nso build/switch/to
 	cp build/switch/touchpad-probe.npdm build/switch/probe-exefs/main.npdm
 	build_pfs0 build/switch/probe-exefs $@
 build/switch/touchpad-overlay.nacp: Makefile.switch
-	nacptool --create 'Touchpad' 'Touchpad contributors' '1.1.0-beta.2' $@
+	nacptool --create 'Touchpad' 'Touchpad contributors' '1.1.0-beta.3' $@
 build/switch/touchpad.ovl: build/switch/touchpad-overlay.elf build/switch/touchpad-overlay.nacp
 	elf2nro $< $@ --nacp=build/switch/touchpad-overlay.nacp
 build/switch/touchpad-test.nacp: Makefile.switch
-	nacptool --create 'Touchpad Input Test' 'Touchpad contributors' '1.1.0-beta.2' $@
+	nacptool --create 'Touchpad Input Test' 'Touchpad contributors' '1.1.0-beta.3' $@
 build/switch/touchpad-test.nro: build/switch/touchpad-test.elf build/switch/touchpad-test.nacp
 	elf2nro $< $@ --nacp=build/switch/touchpad-test.nacp --icon=$(DEVKITPRO)/libnx/default_icon.jpg
 -include $(BACKEND:.o=.d) $(OVERLAY:.o=.d) $(TESTER:.o=.d) build/switch/diagnostic/main.d build/switch/probe/main.d

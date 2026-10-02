@@ -1,0 +1,32 @@
+{
+  "release_version": "1.1.0-beta.3",
+  "feature": "Plus and Minus touchscreen buttons; includes beta2 controls and swipe",
+  "hardware_verified": false,
+  "baseline_git_tag": "v1.0.0-beta.1",
+  "previous_version": "1.1.0-beta.2",
+  "new_buttons": {
+    "minus": {
+      "hid_bit": 11,
+      "center": [
+        540,
+        650
+      ]
+    },
+    "plus": {
+      "hid_bit": 10,
+      "center": [
+        740,
+        650
+      ]
+    }
+  },
+  "test_exit": "Hold Plus and Minus together continuously for 2 seconds in Input Test only",
+  "system_buttons": "HOME and Capture deferred per user fallback; HOME stops the current engine and releases its own injected state",
+  "required_hardware_validation": [
+    "Minus/Plus displayed and received separately in Input Test without exiting",
+    "release, sliding between buttons and combos with direction/shoulder",
+    "two-second exit chord and neutral state on exit",
+    "game pause/menu actions using Plus and Minus",
+    "previous swipe, sleep and game-load behavior"
+  ]
+}
