@@ -1,0 +1,27 @@
+{
+  "release_version": "1.1.0-beta.4",
+  "feature": "Direct system brightness control inside Touchpad menu; includes beta3 controls",
+  "hardware_verified": false,
+  "baseline_git_tag": "v1.0.0-beta.1",
+  "previous_version": "1.1.0-beta.3",
+  "user_choice": "Direct brightness control instead of native HOME quick settings",
+  "brightness": {
+    "service": "lbl in overlay only",
+    "adjustment_percent_range": [
+      5,
+      100
+    ],
+    "automatic_brightness": "read and preserve; never toggle",
+    "persistence": "explicit Save system brightness action",
+    "open_resume": "read only; never replay old slider values"
+  },
+  "required_hardware_validation": [
+    "Touchpad brightness page with backend not running",
+    "touch slider brightness adjustment and readback on OLED",
+    "existing auto brightness state unchanged",
+    "explicit save survives sleep and reboot",
+    "HOME/sleep/reopen refresh with no stale writes",
+    "return to Touchpad and re-enable controls",
+    "previous plus/minus, swipe and game-load behavior"
+  ]
+}

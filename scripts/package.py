@@ -12,7 +12,7 @@ from project_files import compiler_inputs, tree_hash, release_sources
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT/'build/switch'
 DIST = ROOT/'dist'
-VERSION = '1.1.0-beta.3'
+VERSION = '1.1.0-beta.4'
 if VERSION == '0.1.0':
     raise SystemExit('Release 0.1.0 is blocked after an on-device boot failure. See docs/BOOT_FAILURE.md; do not redistribute or overwrite this release.')
 check()
@@ -26,8 +26,8 @@ print(test.stdout,end='')
 (ROOT/'build/host/test.log').write_text(test.stdout)
 if test.returncode: raise SystemExit(test.returncode)
 info['autostart'] = False
-info['release_status'] = 'arcade, shoulders, swipe and plus/minus beta; hardware validation pending'
-info['hardware_validation'] = json.loads((ROOT/'docs/releases/1.1.0-beta.3-validation.json').read_text())
+info['release_status'] = 'touch controls and direct brightness beta; hardware validation pending'
+info['hardware_validation'] = json.loads((ROOT/'docs/releases/1.1.0-beta.4-validation.json').read_text())
 info['backend_memory'] = {'physical_pool':'Applet', 'pm_resource_group':'Applet', 'fixed_heap_bytes':4*1024*1024, 'main_stack_bytes':65536}
 info['diagnostic_version'] = '0.3.4'
 info['host_test_result'] = test.stdout.strip().splitlines()[-1]

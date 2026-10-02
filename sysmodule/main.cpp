@@ -290,7 +290,7 @@ int main() {
         mkdir("sdmc:/config/touchpad",0777);
         startupLog = std::fopen("sdmc:/config/touchpad/startup.log","w");
         runtimeTrace.open("sdmc:/config/touchpad/runtime.log","sdmc:/config/touchpad/runtime.previous.log");
-        runtimeTrace.write("1.1.0-beta.3-backend-start");
+        runtimeTrace.write("1.1.0-beta.4-backend-start");
     }
     auto record = [&](const char* stage) {
         if (!startupLog) return;
@@ -298,7 +298,7 @@ int main() {
         std::fflush(startupLog);
         fsync(fileno(startupLog));
     };
-    record("1.1.0-beta.3 mount SD");
+    record("1.1.0-beta.4 mount SD");
     record("configured pool=Applet group=Applet heap=4194304 stack=65536");
     if (R_SUCCEEDED(rc)) readConfiguration();
     if (R_SUCCEEDED(rc)) rc = hidInitialize();
