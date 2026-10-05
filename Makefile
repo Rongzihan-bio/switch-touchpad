@@ -18,6 +18,7 @@ test:
 	./build/host/controls-tests
 	c++ -std=c++20 -O1 -g -Wall -Wextra -Werror -fsanitize=address,undefined -fno-omit-frame-pointer -I. tests/brightness_tests.cpp -o build/host/brightness-tests
 	./build/host/brightness-tests
+	python3 tests/run_brightness_slider_tests.py
 build:
 	python3 scripts/build.py
 package:

@@ -4,6 +4,7 @@
 #include "common/bounded_client.hpp"
 #include "common/trace.hpp"
 #include "overlay/brightness_control.hpp"
+#include "overlay/brightness_scale.hpp"
 #include "overlay/brightness_service.hpp"
 #include <cstdio>
 
@@ -152,7 +153,7 @@ class BrightnessGui : public tsl::Gui {
     void sync() {
         level_->setValue(control_.available ? std::to_string(control_.percent)+"%" : "读取失败");
         automatic_->setValue(control_.available ? control_.automatic ? "开启（保持系统设置）" : "关闭" : "未知");
-        if (control_.available) slider_->setProgress(static_cast<u8>(control_.percent));
+        if (control_.available) slider_->setProgress(BrightnessScale::toStep(control_.percent));
         if (control_.result) {
             constexpr const char* names[]{"操作","连接","读取","设置","应用","保存"};
             char text[100];
@@ -172,8 +173,9 @@ public:
         auto* frame = new tsl::elm::OverlayFrame("Touchpad", "屏幕亮度");
         auto* list = new tsl::elm::List();
         level_ = new tsl::elm::ListItem("系统亮度"); list->addItem(level_);
-        slider_ = new tsl::elm::StepTrackBar("\u2600",21);
-        slider_->setValueChangedListener([this](u8 value) {
+        slider_ = new tsl::elm::StepTrackBar("\u2600",BrightnessScale::Steps);
+        slider_->setValueChangedListener([this](u8 step) {
+            const auto value = BrightnessScale::toPercent(step);
             saved_ = false;
             control_.set(value);
             trace.write("brightness-set",value,control_.result);
@@ -235,7 +237,7 @@ class Gui : public tsl::Gui {
     u64 lastPoll_ = 0;
 public:
     tsl::elm::Element* createUI() override {
-        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "1.1.0-beta.4");
+        auto* frame = new tsl::elm::OverlayFrame("Touchpad", "1.1.0-beta.5");
         auto* list = new tsl::elm::List();
         state_ = new tsl::elm::ListItem("后台状态");
         list->addItem(state_);
@@ -337,7 +339,7 @@ class Overlay : public tsl::Overlay {
     void initServices() override {
         sdMounted=R_SUCCEEDED(fsdevMountSdmc());
         if (sdMounted) trace.open("sdmc:/config/touchpad/overlay.log","sdmc:/config/touchpad/overlay.previous.log");
-        trace.write("1.1.0-beta.4-overlay-start");
+        trace.write("1.1.0-beta.5-overlay-start");
         if (call(Command::Status)) draft = status.settings;
     }
     void onShow() override {

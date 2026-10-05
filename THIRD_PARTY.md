@@ -11,7 +11,7 @@ This project is distributed under GPL-2.0-or-later. `LICENSE` contains GPL v2; n
 
 The managed-layer stack shim and ARUID 0 input-permission call were adapted from libtesla's public wrappers; GPL terms and original project attribution are preserved here. The tiled pixel address calculation implements the framebuffer format documented by libnx. The sys-con HDLS implementation was inspected as an API/lifecycle reference; no sys-con source is compiled or bundled.
 
-The accompanying `touchpad-1.1.0-beta.4-source.zip` supplies the corresponding project source, modified libtesla headers, build scripts, protocol and tests. Do not redistribute a modified binary without its matching source and notices.
+The accompanying `touchpad-1.1.0-beta.5-source.zip` supplies the corresponding project source, modified libtesla headers, build scripts, protocol and tests. Do not redistribute a modified binary without its matching source and notices.
 
 Reference repositories, fixed source commits and archive hashes are recorded in `toolchain.lock.json`. Original reference-only downloads remain untouched in the user's downloads directory and are not part of this project's source archive.
 
